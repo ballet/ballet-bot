@@ -84,3 +84,5 @@ const recursivelyCreateTrees = async (context, dir, path, tree) => {
 
     return await context.github.git.createTree(context.repo({tree: objects}));
 }
+
+module.exports = { removeRedundantFeatures };

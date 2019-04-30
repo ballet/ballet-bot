@@ -39,5 +39,3 @@ const getRedundantFeaturesFromLog = log => {
 }
 
 module.exports = { getTravisRedundantFeatures };
-
-

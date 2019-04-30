@@ -1,7 +1,7 @@
 // Checks API example
 // See: https://developer.github.com/v3/checks/ to learn more
 const travis = require('./travis.js');
-
+const git = require('./git.js');
 /**
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Application} app
@@ -17,5 +17,5 @@ module.exports = app => {
     }
     const detailsUrl = checkRun.details_url;
     const redundantFeatures = travis.getTravisRedundantFeatures(detailsUrl);
-    const gitDir = await downloadRepo(checkRun.check_suite.repository.html_url);
+    return git.removeRedundantFeatures(context, redundantFeatures);
 }
