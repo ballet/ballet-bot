@@ -10,12 +10,14 @@ const BALLET_AUTHOR = {
 }
 
 const removeRedundantFeatures = async (context, features) => {
-    const repoUrl = context.payload.check_run.check_suite.repository.html_url;
+    const repoUrl = context.payload.repository.html_url;
     const repoDir = await downloadRepo(repoUrl);
     for(let i = 0; i < features.length; i++) {
         const feature = features[i];
-        await removeFeatureFromRepo(context, dir.name, feature);
+        await removeFeatureFromRepo(context, repoDir.name, feature);
     }
+
+    repoDir.removeCallback();
 }
 
 const downloadRepo = async (url, ref) => {
@@ -34,17 +36,23 @@ const removeFeatureFromRepo = async (context, dir, feature) => {
     const featurePath = feature + '.py';
     const pathPieces = featurePath.split('/');
     const headRef = await git.resolveRef({dir, ref: 'HEAD'});
-    let headTree = await git.readObject({dir, oid: headRef.object.tree});
-    headTree = await recursivelyCreateTrees(context, dir, pathPieces, tree);
+    const refObj = await git.readObject({dir, oid: headRef});
+    let headTree = refObj.object.tree;
+    headTree = await recursivelyCreateTrees(
+        context,
+        dir,
+        pathPieces,
+        headTree);
+
     const commitInfo = {
-        parent: headRef,
-        tree: tree.sha,
+        parents: [headRef],
+        tree: headTree.data.sha,
         message: PRUNE_MESSAGE.replace('$feature', prettyPrintFeature(feature)),
         author: BALLET_AUTHOR,
     }
-    const commit = await context.github.createCommit(context.repo(commitInfo));
-    await context.github.updateRef(context.repo({
-        ref: 'master',
+    const {data: commit} = await context.github.gitdata.createCommit(context.repo(commitInfo));
+    await context.github.gitdata.updateRef(context.repo({
+        ref: 'heads/master',
         sha: commit.sha,
     }));
 
@@ -52,9 +60,10 @@ const removeFeatureFromRepo = async (context, dir, feature) => {
 }
 
 const recursivelyCreateTrees = async (context, dir, path, tree) => {
+    const treeObj = await git.readObject({dir, oid: tree});
     let objects = [];
-    for(let i = 0; i < tree.object.entries.length; i++) {
-        const obj = tree.object.entries[i];
+    for(let i = 0; i < treeObj.object.entries.length; i++) {
+        const obj = treeObj.object.entries[i];
         if (obj.type === 'blob'
             && path[0] === obj.path
             && path.length === 1) {
@@ -66,12 +75,12 @@ const recursivelyCreateTrees = async (context, dir, path, tree) => {
                 context,
                 dir,
                 path.slice(1),
-                tree
+                obj.oid
             );
             if (newTree) {
                 objects.push({
                     ...obj,
-                    sha: newTree.sha,
+                    sha: newTree.data.sha,
                 })
             }
         } else {
@@ -81,8 +90,13 @@ const recursivelyCreateTrees = async (context, dir, path, tree) => {
             })
         }
     }
+    return await context.github.gitdata.createTree(context.repo({tree: objects}));
+}
 
-    return await context.github.git.createTree(context.repo({tree: objects}));
+const prettyPrintFeature = feature => {
+    const parts = feature.split('/');
+    const { length } = parts;
+    return parts[length - 2] + ', ' + parts[length - 1];
 }
 
 module.exports = { removeRedundantFeatures };
