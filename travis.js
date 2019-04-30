@@ -33,11 +33,9 @@ const getRedundantFeaturesFromLog = log => {
     logLines = log.split('\n');
     const features = logLines
         .filter(line => line.includes(REDUNDANT_FEATURE_MARKER))
-        .map(line => line.trim())
-        .map(line => line.split(REDUNDANT_FEATURE_MARKER)[1])
-        .map(feature => feature.split('.').join('/'))
-    console.log(features)
-    return features
+        .map(line => line.split(REDUNDANT_FEATURE_MARKER)[1].trim())
+        .map(feature => feature.split('.').join('/'));
+    return features;
 }
 
 module.exports = { getTravisRedundantFeatures };
