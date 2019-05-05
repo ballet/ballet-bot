@@ -1,7 +1,7 @@
 // Checks API example
 // See: https://developer.github.com/v3/checks/ to learn more
-const travis = require('./travis.js');
-const git = require('./git.js');
+const travis = require('./lib/travis.js');
+const git = require('./lib/git.js');
 /**
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Application} app
