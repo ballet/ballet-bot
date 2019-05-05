@@ -26,14 +26,10 @@ module.exports = app => {
   });
 };
 
-const onCheckRunMasterMerge = async context => {
-  const checkRun = context.payload.check_run;
-  if (checkRun.check_suite.head_branch !== 'master') {
-    return;
-  }
-  const detailsUrl = checkRun.details_url;
+const pruneRedundantFeatures = async (context, repo, config) => {
+  const detailsUrl = context.payload.check_run.details_url;
   const redundantFeatures = await travis.getTravisRedundantFeatures(detailsUrl);
   if (redundantFeatures.length) {
-    return git.removeRedundantFeatures(context, redundantFeatures);
+    return git.removeRedundantFeatures(context, repo, redundantFeatures);
   }
 };
