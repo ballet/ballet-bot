@@ -1,14 +1,39 @@
 const rp = require('request-promise');
 
-const TRAVIS_BUILD_API = 'https://api.travis-ci.com/v3/build/$id';
-const TRAVIS_JOB_LOG_API = 'https://api.travis-ci.com/v3/job/$id/log.txt';
+const TRAVIS_BASE_API = 'https://api.travis-ci.com/v3/';
+const TRAVIS_BUILD_API = TRAVIS_BASE_API + 'build/$id';
+const TRAVIS_BUILD_JOB_API = TRAVIS_BASE_API + 'build/$id/jobs';
+const TRAVIS_JOB_LOG_API = TRAVIS_BASE_API + 'job/$id/log.txt';
 const REDUNDANT_FEATURE_MARKER = 'Found Redundant Feature: ';
+const JOB_NAME_TO_NUMBER = {
+  project_structure_validation: 0,
+  feature_api_validation: 1,
+  feature_acceptance_evaluation: 2,
+  feature_pruning_evaluation: 3
+};
 
-const getTravisRedundantFeatures = async detailsUrl => {
-  const buildId = getBuildIdFromDetailsUrl(detailsUrl);
+const getTravisRedundantFeatures = async buildId => {
   const build = await getBuildFromId(buildId);
-  const prunerLog = await getPrunerLogFromBuild(build);
+  const prunerLog = await getJobLogFromBuild(
+    build,
+    'feature_pruning_evaluation'
+  );
   return getRedundantFeaturesFromLog(prunerLog);
+};
+
+const doesBuildOnlyFailAcceptance = async buildId => {
+  const jobs = await getJobsFromBuild(buildId);
+  const acceptanceJob =
+    jobs[JOB_NAME_TO_NUMBER['feature_acceptance_evaluation']];
+  const apiJob = jobs[JOB_NAME_TO_NUMBER['feature_api_validation']];
+
+  return acceptanceJob.state === 'failed' && apiJob.state === 'passed';
+};
+
+const doesBuildNotFailAllChecks = async buildId => {
+  const jobs = await getJobsFromBuild(buildId);
+  const failedJobs = jobs.filter(job => job.state === 'failed');
+  return failedJobs.length === 0;
 };
 
 const getBuildIdFromDetailsUrl = detailsUrl => {
@@ -22,8 +47,14 @@ const getBuildFromId = async buildId => {
   return build;
 };
 
-const getPrunerLogFromBuild = async build => {
-  const prunerJob = build.jobs[build.jobs.length - 1];
+const getJobsFromBuild = async buildId => {
+  const jobBuildUrl = TRAVIS_BUILD_JOB_API.replace('$id', buildId);
+  return JSON.parse(await rp(jobBuildUrl));
+};
+
+const getJobLogFromBuild = async (build, job) => {
+  const jobNum = JOB_NAME_TO_NUMBER[job];
+  const prunerJob = build.jobs[jobNum];
   const jobUrl = TRAVIS_JOB_LOG_API.replace('$id', prunerJob.id);
   const jobLog = await rp(jobUrl);
   return jobLog;
@@ -38,4 +69,9 @@ const getRedundantFeaturesFromLog = log => {
   return features;
 };
 
-module.exports = { getTravisRedundantFeatures };
+module.exports = {
+  doesBuildOnlyFailAcceptance,
+  doesBuildNotFailAllChecks,
+  getBuildIdFromDetailsUrl,
+  getTravisRedundantFeatures
+};

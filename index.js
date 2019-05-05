@@ -9,6 +9,10 @@ const git = require('./git.js');
 module.exports = app => {
   app.on('check_run.completed', async context => {
     const checkRun = context.payload.check_run;
+    const repoUrl = context.payload.repository.html_url;
+    const repoDir = git.downloadRepo(repoUrl);
+    const config = git.getConfigFromRepo(repoDir.name);
+
     if (checkRun.check_suite.head_branch !== 'master') {
       return;
     }
@@ -20,4 +24,16 @@ module.exports = app => {
       return git.removeRedundantFeatures(context, redundantFeatures);
     }
   });
+};
+
+const onCheckRunMasterMerge = async context => {
+  const checkRun = context.payload.check_run;
+  if (checkRun.check_suite.head_branch !== 'master') {
+    return;
+  }
+  const detailsUrl = checkRun.details_url;
+  const redundantFeatures = await travis.getTravisRedundantFeatures(detailsUrl);
+  if (redundantFeatures.length) {
+    return git.removeRedundantFeatures(context, redundantFeatures);
+  }
 };

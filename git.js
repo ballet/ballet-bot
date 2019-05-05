@@ -1,6 +1,8 @@
 const fs = require('fs');
 const git = require('isomorphic-git');
+const path = require('path');
 const tmp = require('tmp');
+const YAML = require('yaml');
 git.plugins.set('fs', fs);
 
 const PRUNE_MESSAGE = 'Pruning Redundant Features: $features';
@@ -8,6 +10,7 @@ const BALLET_AUTHOR = {
   name: 'Ballet',
   email: 'dai-lab@mit.edu' // Some email...
 };
+const BALLET_CONFIG_FILE = 'ballet.yml';
 
 const removeRedundantFeatures = async (context, features) => {
   const repoUrl = context.payload.repository.html_url;
@@ -172,4 +175,29 @@ const prettyPrintFeature = file => {
   return user + '.' + feature;
 };
 
-module.exports = { removeRedundantFeatures };
+const getConfigFromRepo = async repoDir => {
+  const configPath = path.join(repoDir, BALLET_CONFIG_FILE);
+  const configRaw = fs.readFileSync(configPath);
+  return YAML.parse(configRaw);
+};
+
+const isOnMasterAfterMerge = async context => {
+  const headBranch = context.check_run.check_suite.head_branch;
+  if (headBranch !== 'master') {
+    return false;
+  }
+
+  const commitSha = context.check_run.head_sha;
+  const commit = context.git.gitdata.getCommit(
+    context.repo({ commit_sha: commitSha })
+  );
+
+  return commit.parents.length > 1;
+};
+
+module.exports = {
+  downloadRepo,
+  getConfigFromRepo,
+  isOnMasterAfterMerge,
+  removeRedundantFeatures
+};
