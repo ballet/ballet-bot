@@ -2,34 +2,48 @@
 // See: https://developer.github.com/v3/checks/ to learn more
 const travis = require('./lib/travis.js');
 const git = require('./lib/git.js');
+const prune = require('./lib/pruning.js');
 /**
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Application} app
  */
 module.exports = app => {
   app.on('check_run.completed', async context => {
-    const checkRun = context.payload.check_run;
     const repoUrl = context.payload.repository.html_url;
+    const detailsUrl = context.payload.check_run.details_url;
+
     const repoDir = git.downloadRepo(repoUrl);
     const config = git.getConfigFromRepo(repoDir.name);
+    const travisBuild = travis.getBuildIdFromDetailsUrl(detailsUrl);
 
-    if (checkRun.check_suite.head_branch !== 'master') {
-      return;
+    if (await shouldPruneRedundantFeatures(context, config, travisBuild)) {
+      await pruneRedundantFeatures(context, repoDir.name, config, travisBuild);
     }
-    const detailsUrl = checkRun.details_url;
-    const redundantFeatures = await travis.getTravisRedundantFeatures(
-      detailsUrl
-    );
-    if (redundantFeatures.length) {
-      return git.removeRedundantFeatures(context, redundantFeatures);
-    }
+
+    repoDir.removeCallback();
   });
 };
 
-const pruneRedundantFeatures = async (context, repo, config) => {
-  const detailsUrl = context.payload.check_run.details_url;
-  const redundantFeatures = await travis.getTravisRedundantFeatures(detailsUrl);
+const shouldPruneRedundantFeatures = async (context, config, buildId) => {
+  if (!git.isOnMasterAfterMerge(context)) {
+    return false;
+  } else if (!travis.doesBuildNotFailAllChecks(buildId)) {
+    return false;
+  } else if (config.github.prune_action === 'no_action') {
+    return false;
+  }
+
+  return true;
+};
+
+const pruneRedundantFeatures = async (context, repoDir, config, buildId) => {
+  const redundantFeatures = await travis.getTravisRedundantFeatures(buildId);
   if (redundantFeatures.length) {
-    return git.removeRedundantFeatures(context, repo, redundantFeatures);
+    return prune.removeRedundantFeatures(
+      context,
+      repoDir,
+      config,
+      redundantFeatures
+    );
   }
 };
