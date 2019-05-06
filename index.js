@@ -14,20 +14,38 @@ module.exports = app => {
 
     const repoDir = await github.downloadRepo(repoUrl);
     const config = await github.getConfigFromRepo(repoDir.name, context);
-    const travisBuild = travis.getBuildIdFromDetailsUrl(detailsUrl);
 
-    if (await shouldPruneRedundantFeatures(context, config, travisBuild)) {
+    const travisBuildId = travis.getBuildIdFromDetailsUrl(detailsUrl);
+    const travisBuild = await travis.getBuildFromId(travisBuildId);
+
+    if (await shouldPruneRedundantFeatures(context, config, travisBuildId)) {
       await pruneRedundantFeatures(context, repoDir.name, config, travisBuild);
+    } else if (await shouldAcceptPassingFeature(context, config, travisBuild)) {
+      await context.github.pullRequests.merge(
+        context.repo({ pull_number: travisBuild.pull_request_number })
+      );
     }
 
     repoDir.removeCallback();
   });
 };
 
+const shouldAcceptPassingFeature = async (context, config, build) => {
+  if (build.event_type !== 'pull_request') {
+    return false;
+  } else if (!(await travis.doesBuildNotFailAllChecks(build.id))) {
+    return false;
+  } else if (config.github.accept_passing_features === 'no') {
+    return false;
+  }
+
+  return true;
+};
+
 const shouldPruneRedundantFeatures = async (context, config, buildId) => {
   if (!github.isOnMasterAfterMerge(context)) {
     return false;
-  } else if (!travis.doesBuildNotFailAllChecks(buildId)) {
+  } else if (!(await travis.doesBuildNotFailAllChecks(buildId))) {
     return false;
   } else if (config.github.pruning_action === 'no_action') {
     return false;
@@ -36,8 +54,8 @@ const shouldPruneRedundantFeatures = async (context, config, buildId) => {
   return true;
 };
 
-const pruneRedundantFeatures = async (context, repoDir, config, buildId) => {
-  const redundantFeatures = await travis.getTravisRedundantFeatures(buildId);
+const pruneRedundantFeatures = async (context, repoDir, config, build) => {
+  const redundantFeatures = await travis.getTravisRedundantFeatures(build);
   if (redundantFeatures.length) {
     return prune.removeRedundantFeatures(
       context,
