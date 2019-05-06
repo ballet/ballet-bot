@@ -35,6 +35,13 @@ const shouldAcceptPassingFeature = async (context, config, build) => {
     return false;
   } else if (!(await travis.doesBuildNotFailAllChecks(build.id))) {
     return false;
+  } else if (
+    !(await github.isPullRequestProposingFeature(
+      context,
+      build.pull_request_number
+    ))
+  ) {
+    return false;
   } else if (config.github.accept_passing_features === 'no') {
     return false;
   }
