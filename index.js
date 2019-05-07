@@ -17,12 +17,11 @@ module.exports = app => {
 
     const travisBuildId = travis.getBuildIdFromDetailsUrl(detailsUrl);
     const travisBuild = await travis.getBuildFromId(travisBuildId);
-
     if (await shouldPruneRedundantFeatures(context, config, travisBuildId)) {
       await pruneRedundantFeatures(context, repoDir.name, config, travisBuild);
     } else if (await shouldAcceptPassingFeature(context, config, travisBuild)) {
       await context.github.pullRequests.merge(
-        context.repo({ pull_number: travisBuild.pull_request_number })
+        context.repo({ number: travisBuild.pull_request_number })
       );
     }
 
@@ -34,6 +33,7 @@ const shouldAcceptPassingFeature = async (context, config, build) => {
   if (build.event_type !== 'pull_request') {
     return false;
   } else if (!(await travis.doesBuildNotFailAllChecks(build.id))) {
+    context.log(2);
     return false;
   } else if (
     !(await github.isPullRequestProposingFeature(
@@ -45,12 +45,11 @@ const shouldAcceptPassingFeature = async (context, config, build) => {
   } else if (config.github.accept_passing_features === 'no') {
     return false;
   }
-
   return true;
 };
 
 const shouldPruneRedundantFeatures = async (context, config, buildId) => {
-  if (!github.isOnMasterAfterMerge(context)) {
+  if (!(await github.isOnMasterAfterMerge(context))) {
     return false;
   } else if (!(await travis.doesBuildNotFailAllChecks(buildId))) {
     return false;
