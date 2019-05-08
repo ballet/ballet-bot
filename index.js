@@ -23,6 +23,8 @@ module.exports = app => {
       await context.github.pullRequests.merge(
         context.repo({ number: travisBuild.pull_request_number })
       );
+
+      await github.closePullRequest(context, travisBuild.pull_request_number);
     }
 
     repoDir.removeCallback();
