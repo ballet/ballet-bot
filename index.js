@@ -35,7 +35,6 @@ const shouldAcceptPassingFeature = async (context, config, build) => {
   if (build.event_type !== 'pull_request') {
     return false;
   } else if (!(await travis.doesBuildNotFailAllChecks(build.id))) {
-    context.log(2);
     return false;
   } else if (
     !(await github.isPullRequestProposingFeature(
