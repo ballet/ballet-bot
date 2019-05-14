@@ -17,6 +17,9 @@ module.exports = app => {
 
     const travisBuildId = travis.getBuildIdFromDetailsUrl(detailsUrl);
     const travisBuild = await travis.getBuildFromId(travisBuildId);
+
+    logImportantInformation(context, travisBuild);
+
     if (await shouldPruneRedundantFeatures(context, config, travisBuildId)) {
       await pruneRedundantFeatures(context, repoDir.name, config, travisBuild);
     } else if (await shouldAcceptPassingFeature(context, config, travisBuild)) {
@@ -29,6 +32,11 @@ module.exports = app => {
 
     repoDir.removeCallback();
   });
+};
+
+const logImportantInformation = (context, travisBuild) => {
+  context.log(`Getting a check from branch: ${travisBuild.branch.name}`);
+  context.log(`On commit: ${travisBuild.commit.message}`);
 };
 
 const shouldAcceptPassingFeature = async (context, config, build) => {
