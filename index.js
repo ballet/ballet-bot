@@ -41,8 +41,10 @@ const logImportantInformation = (context, travisBuild) => {
 
 const shouldAcceptPassingFeature = async (context, config, build) => {
   if (build.event_type !== 'pull_request') {
+    context.log('Not merging because not a pull request');
     return false;
   } else if (!(await travis.doesBuildNotFailAllChecks(build.id))) {
+    context.log('Not merging because not passing');
     return false;
   } else if (
     !(await github.isPullRequestProposingFeature(
@@ -50,8 +52,10 @@ const shouldAcceptPassingFeature = async (context, config, build) => {
       build.pull_request_number
     ))
   ) {
+    context.log('Not merging because not proposing a PR');
     return false;
   } else if (config.github.accept_passing_features === 'no') {
+    context.log('Not merging because config');
     return false;
   }
   return true;
@@ -59,10 +63,13 @@ const shouldAcceptPassingFeature = async (context, config, build) => {
 
 const shouldPruneRedundantFeatures = async (context, config, buildId) => {
   if (!(await github.isOnMasterAfterMerge(context))) {
+    context.log('Not pruning because not on master on merge');
     return false;
   } else if (!(await travis.doesBuildNotFailAllChecks(buildId))) {
+    context.log('Not pruning because Travis is failing');
     return false;
   } else if (config.github.pruning_action === 'no_action') {
+    context.log('Not pruning because config');
     return false;
   }
 
@@ -71,6 +78,8 @@ const shouldPruneRedundantFeatures = async (context, config, buildId) => {
 
 const pruneRedundantFeatures = async (context, repoDir, config, build) => {
   const redundantFeatures = await travis.getTravisRedundantFeatures(build);
+  context.log('FOUND REDUNDANT FEATURES: ');
+  context.log(redundantFeatures.join('\n'));
   if (redundantFeatures.length) {
     return prune.removeRedundantFeatures(
       context,
