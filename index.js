@@ -22,11 +22,10 @@ module.exports = app => {
 
     if (await shouldPruneRedundantFeatures(context, config, travisBuildId)) {
       await pruneRedundantFeatures(context, repoDir.name, config, travisBuild);
-    } else if (await shouldAcceptPassingFeature(context, config, travisBuild)) {
-      await context.github.pullRequests.merge(
-        context.repo({ number: travisBuild.pull_request_number })
-      );
-
+    } else if (await shouldMergeAcceptedFeature(context, config, travisBuild)) {
+      await github.mergePullRequest(context, travisBuild.pull_request_number);
+      await github.closePullRequest(context, travisBuild.pull_request_number);
+    } else if (await shouldCloseRejectedFeature(context, config, travisBuild)) {
       await github.closePullRequest(context, travisBuild.pull_request_number);
     }
 
@@ -39,7 +38,7 @@ const logImportantInformation = (context, travisBuild) => {
   context.log(`On commit: ${travisBuild.commit.message}`);
 };
 
-const shouldAcceptPassingFeature = async (context, config, build) => {
+const shouldMergeAcceptedFeature = async (context, config, build) => {
   if (build.event_type !== 'pull_request') {
     context.log('Not merging because not a pull request');
     return false;
@@ -52,9 +51,9 @@ const shouldAcceptPassingFeature = async (context, config, build) => {
       build.pull_request_number
     ))
   ) {
-    context.log('Not merging because not proposing a PR');
+    context.log('Not merging because not proposing a feature');
     return false;
-  } else if (config.github.accept_passing_features === 'no') {
+  } else if (config.github.auto_merge_accepted_features === 'no') {
     context.log('Not merging because config');
     return false;
   }
@@ -88,4 +87,26 @@ const pruneRedundantFeatures = async (context, repoDir, config, build) => {
       redundantFeatures
     );
   }
+};
+
+const shouldCloseRejectedFeature = async (context, config, build) => {
+  if (build.event_type !== 'pull_request') {
+    context.log('Not closing because not a pull request');
+    return false;
+  } else if (await travis.doesBuildPassAllChecks(build.id)) {
+    context.log('Not closing because passed all checks');
+    return false;
+  } else if (
+    !(await github.isPullRequestProposingFeature(
+      context,
+      build.pull_request_number
+    ))
+  ) {
+    context.log('Not closing because not proposing a feature');
+    return false;
+  } else if (config.github.auto_close_rejected_features === 'no') {
+    context.log('Not closing because config');
+    return false;
+  }
+  return true;
 };
