@@ -1,6 +1,6 @@
 const nock = require('nock')
 // Requiring our app implementation
-const myProbotApp = require('..')
+const balletApp = require('..')
 const { Probot } = require('probot')
 // Requiring our fixtures
 const checkSuitePayload = require('./fixtures/check_suite.requested')
@@ -8,13 +8,13 @@ const checkRunSuccess = require('./fixtures/check_run.created')
 
 nock.disableNetConnect()
 
-describe('My Probot app', () => {
+describe('ballet-app', () => {
   let probot
 
   beforeEach(() => {
     probot = new Probot({})
     // Load our app into probot
-    const app = probot.load(myProbotApp)
+    const app = probot.load(balletApp)
 
     // just return a test token
     app.app = () => 'test'
