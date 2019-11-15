@@ -20,12 +20,16 @@ module.exports = app => {
 
     logImportantInformation(context, travisBuild);
 
-    if (await shouldPruneRedundantFeatures(context, config, travisBuildId)) {
+    const shouldPrune = shouldPruneRedundantFeatures(context, config, travisBuildId);
+    const shouldMerge = shouldMergeAcceptedFeature(context, config, travisBuild);
+    const shouldClose = shouldCloseRejectedFeature(context, config, travisBuild);
+
+    if (await shouldPrune) {
       await pruneRedundantFeatures(context, repoDir.name, config, travisBuild);
-    } else if (await shouldMergeAcceptedFeature(context, config, travisBuild)) {
+    } else if (await shouldMerge) {
       await github.mergePullRequest(context, travisBuild.pull_request_number);
       await github.closePullRequest(context, travisBuild.pull_request_number);
-    } else if (await shouldCloseRejectedFeature(context, config, travisBuild)) {
+    } else if (await shouldClose) {
       await github.closePullRequest(context, travisBuild.pull_request_number);
     }
 
