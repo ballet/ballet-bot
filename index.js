@@ -20,21 +20,21 @@ module.exports = app => {
 
     logImportantInformation(context, travisBuild)
 
-    const shouldPrune = shouldPruneRedundantFeatures(context, config, travisBuildId);
-    const shouldMerge = shouldMergeAcceptedFeature(context, config, travisBuild);
-    const shouldClose = shouldCloseRejectedFeature(context, config, travisBuild);
+    const shouldPrune = shouldPruneRedundantFeatures(context, config, travisBuildId)
+    const shouldMerge = shouldMergeAcceptedFeature(context, config, travisBuild)
+    const shouldClose = shouldCloseRejectedFeature(context, config, travisBuild)
 
     if (await shouldPrune) {
-      await pruneRedundantFeatures(context, repoDir.name, config, travisBuild);
+      await pruneRedundantFeatures(context, repoDir.name, config, travisBuild)
     }
 
     if (await shouldMerge) {
-      await github.mergePullRequest(context, travisBuild.pull_request_number);
-      await github.closePullRequest(context, travisBuild.pull_request_number);
+      await github.mergePullRequest(context, travisBuild.pull_request_number)
+      await github.closePullRequest(context, travisBuild.pull_request_number)
     }
 
     if (await shouldClose) {
-      await github.closePullRequest(context, travisBuild.pull_request_number);
+      await github.closePullRequest(context, travisBuild.pull_request_number)
     }
 
     repoDir.removeCallback()
@@ -59,11 +59,11 @@ const shouldMergeAcceptedFeature = async (context, config, build) => {
       build.pull_request_number
     ))
   ) {
-    context.log('Not merging because not proposing a feature');
-    return false;
+    context.log('Not merging because not proposing a feature')
+    return false
   } else if (config.github.auto_merge_accepted_features === 'no') {
-    context.log('Not merging because config');
-    return false;
+    context.log('Not merging because config')
+    return false
   }
   return true
 }
@@ -95,26 +95,26 @@ const pruneRedundantFeatures = async (context, repoDir, config, build) => {
       redundantFeatures
     )
   }
-};
+}
 
 const shouldCloseRejectedFeature = async (context, config, build) => {
   if (build.event_type !== 'pull_request') {
-    context.log('Not closing because not a pull request');
-    return false;
+    context.log('Not closing because not a pull request')
+    return false
   } else if (await travis.doesBuildPassAllChecks(build.id)) {
-    context.log('Not closing because passed all checks');
-    return false;
+    context.log('Not closing because passed all checks')
+    return false
   } else if (
     !(await github.isPullRequestProposingFeature(
       context,
       build.pull_request_number
     ))
   ) {
-    context.log('Not closing because not proposing a feature');
-    return false;
+    context.log('Not closing because not proposing a feature')
+    return false
   } else if (config.github.auto_close_rejected_features === 'no') {
-    context.log('Not closing because config');
-    return false;
+    context.log('Not closing because config')
+    return false
   }
-  return true;
-};
+  return true
+}
