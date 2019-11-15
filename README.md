@@ -1,3 +1,5 @@
+[![Travis CI Shield](https://travis-ci.org/HDI-Project/ballet-app.svg?branch=master)](https://travis-ci.org/HDI-Project/ballet-app)
+
 # ballet-app
 
 > A GitHub App built with [Probot](https://github.com/probot/probot) that An app to help with ballet automation and auxillary methods
