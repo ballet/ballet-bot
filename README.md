@@ -1,6 +1,6 @@
-[![Travis CI Shield](https://travis-ci.org/HDI-Project/ballet-app.svg?branch=master)](https://travis-ci.org/HDI-Project/ballet-app)
+[![Travis CI Shield](https://travis-ci.org/HDI-Project/ballet-bot.svg?branch=master)](https://travis-ci.org/HDI-Project/ballet-bot)
 
-# ballet-app
+# ballet-bot
 
 > A GitHub App built with [Probot](https://github.com/probot/probot) that An app to help with ballet automation and auxillary methods
 
@@ -16,7 +16,7 @@ npm start
 
 ## Contributing
 
-If you have suggestions for how ballet-app could be improved, or want to report a bug, open an issue! We'd love all and any contributions.
+If you have suggestions for how ballet-bot could be improved, or want to report a bug, open an issue! We'd love all and any contributions.
 
 For more, check out the [Contributing Guide](CONTRIBUTING.md).
 

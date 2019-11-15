@@ -8,7 +8,7 @@ const checkRunSuccess = require('./fixtures/check_run.created')
 
 nock.disableNetConnect()
 
-describe('ballet-app', () => {
+describe('ballet-bot', () => {
   let probot
 
   beforeEach(() => {

@@ -1,12 +1,12 @@
 {
-  "name": "ballet-app",
+  "name": "ballet-bot",
   "version": "1.0.0",
   "description": "An app to help with ballet automation and auxillary methods",
   "author": "kelvin-lu <kelvinlu@mit.edu> (https://github.com/HDI-Project/ballet)",
   "license": "ISC",
-  "repository": "https://github.com//ballet-app.git",
-  "homepage": "https://github.com//ballet-app",
-  "bugs": "https://github.com//ballet-app/issues",
+  "repository": "https://github.com//ballet-bot.git",
+  "homepage": "https://github.com//ballet-bot",
+  "bugs": "https://github.com//ballet-bot/issues",
   "keywords": [
     "probot",
     "github",
