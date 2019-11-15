@@ -26,10 +26,14 @@ module.exports = app => {
 
     if (await shouldPrune) {
       await pruneRedundantFeatures(context, repoDir.name, config, travisBuild);
-    } else if (await shouldMerge) {
+    }
+
+    if (await shouldMerge) {
       await github.mergePullRequest(context, travisBuild.pull_request_number);
       await github.closePullRequest(context, travisBuild.pull_request_number);
-    } else if (await shouldClose) {
+    }
+
+    if (await shouldClose) {
       await github.closePullRequest(context, travisBuild.pull_request_number);
     }
 
