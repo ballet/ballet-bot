@@ -50,7 +50,7 @@ const shouldMergeAcceptedFeature = async (context, config, build) => {
   if (build.event_type !== 'pull_request') {
     context.log('Not merging because not a pull request')
     return false
-  } else if (!(await travis.doesBuildNotFailAllChecks(build.id))) {
+  } else if (!(await travis.doesBuildPassAllChecks(build.id))) {
     context.log('Not merging because not passing')
     return false
   } else if (
@@ -72,7 +72,7 @@ const shouldPruneRedundantFeatures = async (context, config, buildId) => {
   if (!(await github.isOnMasterAfterMerge(context))) {
     context.log('Not pruning because not on master on merge')
     return false
-  } else if (!(await travis.doesBuildNotFailAllChecks(buildId))) {
+  } else if (!(await travis.doesBuildPassAllChecks(buildId))) {
     context.log('Not pruning because Travis is failing')
     return false
   } else if (config.github.pruning_action === 'no_action') {
