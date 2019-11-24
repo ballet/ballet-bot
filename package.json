@@ -1,7 +1,7 @@
 {
   "name": "ballet-bot",
   "version": "1.0.0",
-  "description": "An app to help with ballet automation and auxillary methods",
+  "description": "A bot to help manage Ballet projects",
   "author": "Kelvin Lu <kelvinlu@mit.edu> (https://github.com/https://github.com/Kelvin-Lu)",
   "contributors": [
     "Micah Smith <micahjsmith@gmail.copm> (https://www.micahsmith.com/)"

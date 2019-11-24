@@ -2,7 +2,9 @@
 
 # ballet-bot
 
-> A GitHub App built with [Probot](https://github.com/probot/probot) that An app to help with ballet automation and auxillary methods
+> A GitHub App built with [Probot](https://github.com/probot/probot)
+
+ballet-bot is a bot to help manage Ballet projects.
 
 ## Setup
 
@@ -22,4 +24,4 @@ For more, check out the [Contributing Guide](CONTRIBUTING.md).
 
 ## License
 
-[ISC](LICENSE) © 2019 kelvin-lu <kelvinlu@mit.edu> (https://github.com/HDI-Project/ballet)
+[ISC](LICENSE) © 2019 Kelvin Lu <kelvinlu@mit.edu> (https://github.com/kelvin-lu)
