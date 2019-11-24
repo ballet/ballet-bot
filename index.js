@@ -1,8 +1,9 @@
-// Checks API example
-// See: https://developer.github.com/v3/checks/ to learn more
 const travis = require('./lib/travis.js')
 const github = require('./lib/github.js')
 const prune = require('./lib/pruning.js')
+
+const BALLET_CONFIG_FILE = 'ballet.yml'
+
 /**
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Application} app
@@ -13,7 +14,7 @@ module.exports = app => {
     const detailsUrl = context.payload.check_run.details_url
 
     const repoDir = await github.downloadRepo(repoUrl)
-    const config = await github.getConfigFromRepo(repoDir.name, context)
+    const config = await context.config(`../${BALLET_CONFIG_FILE}`)
 
     const travisBuildId = travis.getBuildIdFromDetailsUrl(detailsUrl)
     const travisBuild = await travis.getBuildFromId(travisBuildId)
