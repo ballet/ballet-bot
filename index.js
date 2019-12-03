@@ -10,6 +10,8 @@ const BALLET_CONFIG_FILE = 'ballet.yml'
  */
 module.exports = app => {
   app.on('check_run.completed', async context => {
+    context.log(`Responding to ${context.event} (id=${context.id})`);
+
     const repoUrl = context.payload.repository.html_url
     const detailsUrl = context.payload.check_run.details_url
 
