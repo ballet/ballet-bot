@@ -1,6 +1,7 @@
 const travis = require('./lib/travis.js')
 const github = require('./lib/github.js')
 const prune = require('./lib/pruning.js')
+const util = require('util')
 
 const BALLET_CONFIG_FILE = 'ballet.yml'
 
@@ -47,7 +48,8 @@ module.exports = app => {
 const loadConfig = async (context) => {
   const config = await context.config(`../${BALLET_CONFIG_FILE}`)
   if (config.default) {
-    context.log.debug(`Loaded config from ballet.yml:default: ${config.default}`)
+    const s = util.inspect(config.default, { depth: 5, breakLength: Infinity })
+    context.log.debug(`Loaded config from ballet.yml:default: ${s}`)
     return config.default
   }
 }
