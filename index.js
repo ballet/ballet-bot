@@ -10,13 +10,13 @@ const BALLET_CONFIG_FILE = 'ballet.yml'
  */
 module.exports = app => {
   app.on('check_run.completed', async context => {
-    context.log(`Responding to ${context.event} (id=${context.id})`);
+    context.log(`Responding to ${context.event} (id=${context.id})`)
 
     const repoUrl = context.payload.repository.html_url
     const detailsUrl = context.payload.check_run.details_url
 
     const repoDir = await github.downloadRepo(repoUrl)
-    const config = await context.config(`../${BALLET_CONFIG_FILE}`)
+    const config = await loadConfig(context)
 
     const travisBuildId = travis.getBuildIdFromDetailsUrl(detailsUrl)
     const travisBuild = await travis.getBuildFromId(travisBuildId)
@@ -42,6 +42,14 @@ module.exports = app => {
 
     repoDir.removeCallback()
   })
+}
+
+const loadConfig = async (context) => {
+  const config = await context.config(`../${BALLET_CONFIG_FILE}`)
+  if (config.default) {
+    context.log.debug(`Loaded config from ballet.yml:default: ${config.default}`)
+    return config.default
+  }
 }
 
 const logImportantInformation = (context, travisBuild) => {
