@@ -28,17 +28,29 @@ module.exports = app => {
     const shouldMerge = shouldMergeAcceptedFeature(context, config, travisBuild)
     const shouldClose = shouldCloseRejectedFeature(context, config, travisBuild)
 
-    if (await shouldPrune) {
+    const shouldPruneResult = await shouldPrune
+    if (shouldPruneResult.result) {
+      context.log('Pruning features...')
       await pruneRedundantFeatures(context, repoDir.name, config, travisBuild)
+    } else {
+      context.log(`Not acting to prune features because ${shouldPruneResult.reason}`)
     }
 
-    if (await shouldMerge) {
+    const shouldMergeResult = await shouldMerge
+    if (shouldMergeResult.result) {
+      context.log('Merging PR...')
       await github.mergePullRequest(context, travisBuild.pull_request_number)
       await github.closePullRequest(context, travisBuild.pull_request_number)
+    } else {
+      context.log(`Not acting to merge PR because ${shouldMergeResult.reason}`)
     }
 
-    if (await shouldClose) {
+    const shouldCloseResult = await shouldClose
+    if (shouldCloseResult.result) {
+      context.log('Closing PR...')
       await github.closePullRequest(context, travisBuild.pull_request_number)
+    } else {
+      context.log(`Not acting to close PR because ${shouldCloseResult.reason}`)
     }
 
     repoDir.removeCallback()
@@ -60,40 +72,49 @@ const logImportantInformation = (context, travisBuild) => {
 }
 
 const shouldMergeAcceptedFeature = async (context, config, build) => {
+  let result, reason
   if (build.event_type !== 'pull_request') {
-    context.log('Not merging because not a pull request')
-    return false
+    result = false
+    reason = 'not a PR'
   } else if (!(await travis.doesBuildPassAllChecks(build.id))) {
-    context.log('Not merging because not passing')
-    return false
+    result = false
+    reason = 'Travis build did not pass'
   } else if (
     !(await github.isPullRequestProposingFeature(
       context,
       build.pull_request_number
     ))
   ) {
-    context.log('Not merging because not proposing a feature')
-    return false
+    result = false
+    reason = 'PR does not propose a feature'
   } else if (config.github.auto_merge_accepted_features === 'no') {
-    context.log('Not merging because config')
-    return false
+    result = false
+    reason = 'auto_merge_accepted_features disabled in config'
+  } else {
+    result = true
+    reason = '<n/a>'
   }
-  return true
+
+  return { result, reason }
 }
 
 const shouldPruneRedundantFeatures = async (context, config, buildId) => {
+  let result, reason
   if (!(await github.isOnMasterAfterMerge(context))) {
-    context.log('Not pruning because not on master on merge')
-    return false
+    result = false
+    reason = 'not on master branch after merge commit'
   } else if (!(await travis.doesBuildPassAllChecks(buildId))) {
-    context.log('Not pruning because Travis is failing')
-    return false
+    result = false
+    reason = 'Travis build is failing'
   } else if (config.github.pruning_action === 'no_action') {
-    context.log('Not pruning because config')
-    return false
+    result = false
+    reason = 'pruning_action set to no_action in config'
+  } else {
+    result = true
+    reason = '<n/a>'
   }
 
-  return true
+  return { result, reason }
 }
 
 const pruneRedundantFeatures = async (context, repoDir, config, build) => {
@@ -111,23 +132,28 @@ const pruneRedundantFeatures = async (context, repoDir, config, build) => {
 }
 
 const shouldCloseRejectedFeature = async (context, config, build) => {
+  let result, reason
   if (build.event_type !== 'pull_request') {
-    context.log('Not closing because not a pull request')
-    return false
+    result = false
+    reason = 'not a pull request'
   } else if (await travis.doesBuildPassAllChecks(build.id)) {
-    context.log('Not closing because passed all checks')
-    return false
+    result = false
+    reason = 'passed all checks on CI'
   } else if (
     !(await github.isPullRequestProposingFeature(
       context,
       build.pull_request_number
     ))
   ) {
-    context.log('Not closing because not proposing a feature')
-    return false
+    result = false
+    reason = 'PR does not propose a feature'
   } else if (config.github.auto_close_rejected_features === 'no') {
-    context.log('Not closing because config')
-    return false
+    result = false
+    reason = 'auto_close_rejected_features disabled in config'
+  } else {
+    result = true
+    reason = '<n/a>'
   }
-  return true
+
+  return { result, reason }
 }
