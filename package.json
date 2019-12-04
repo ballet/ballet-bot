@@ -23,20 +23,19 @@
     "test:watch": "jest --watch --notify --notifyMode=change --coverage"
   },
   "dependencies": {
-    "@octokit/rest": "^16.35.0",
-    "isomorphic-git": "^0.54.2",
-    "probot": "^7.2.0",
+    "isomorphic-git": "^0.70.8",
+    "probot": "^9.6.6",
     "request": "^2.88.0",
-    "request-promise": "^4.2.4",
+    "request-promise": "^4.2.5",
     "tmp": "^0.1.0",
     "util": "^0.12.1"
   },
   "devDependencies": {
-    "jest": "^24.0.0",
-    "nock": "^10.0.0",
-    "nodemon": "^1.17.2",
+    "jest": "^24.9.0",
+    "nock": "^11.7.0",
+    "nodemon": "^2.0.1",
     "smee-client": "^1.0.2",
-    "standard": "^12.0.1"
+    "standard": "^14.3.1"
   },
   "engines": {
     "node": ">= 8.3.0"
