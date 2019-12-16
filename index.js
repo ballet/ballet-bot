@@ -12,7 +12,7 @@ const BALLET_CONFIG_FILE = 'ballet.yml'
  */
 module.exports = app => {
   app.on('check_run.completed', async context => {
-    context.log(`Responding to ${context.event} (id=${context.id})`)
+    context.log.info(`Responding to ${context.event} (id=${context.id})`)
 
     const repoUrl = context.payload.repository.html_url
     const detailsUrl = context.payload.check_run.details_url
@@ -31,15 +31,15 @@ module.exports = app => {
 
     const shouldPruneResult = await shouldPrune
     if (shouldPruneResult.result) {
-      context.log('Pruning features...')
+      context.log.info('Pruning features...')
       await pruneRedundantFeatures(context, repoDir.name, config, travisBuild)
     } else {
-      context.log(`Not acting to prune features because ${shouldPruneResult.reason}`)
+      context.log.info(`Not acting to prune features because ${shouldPruneResult.reason}`)
     }
 
     const shouldMergeResult = await shouldMerge
     if (shouldMergeResult.result) {
-      context.log('Merging PR...')
+      context.log.info('Merging PR...')
       const message = dedent`
         After validation, your feature was accepted. It will be automatically merged into the project.
       `
@@ -47,19 +47,19 @@ module.exports = app => {
       await github.mergePullRequest(context, travisBuild.pull_request_number)
       await github.closePullRequest(context, travisBuild.pull_request_number)
     } else {
-      context.log(`Not acting to merge PR because ${shouldMergeResult.reason}`)
+      context.log.info(`Not acting to merge PR because ${shouldMergeResult.reason}`)
     }
 
     const shouldCloseResult = await shouldClose
     if (shouldCloseResult.result) {
-      context.log('Closing PR...')
+      context.log.info('Closing PR...')
       const message = dedent`
         After validation, your feature was rejected. Your pull request will be closed. For more details about failures in the validation process, check out the Travis CI build logs.
       `
       await github.commentOnPullRequest(context, travisBuild.pull_request_number, message)
       await github.closePullRequest(context, travisBuild.pull_request_number)
     } else {
-      context.log(`Not acting to close PR because ${shouldCloseResult.reason}`)
+      context.log.info(`Not acting to close PR because ${shouldCloseResult.reason}`)
     }
 
     repoDir.removeCallback()
@@ -76,8 +76,8 @@ const loadConfig = async (context) => {
 }
 
 const logImportantInformation = (context, travisBuild) => {
-  context.log(`Getting a check from branch: ${travisBuild.branch.name}`)
-  context.log(`On commit: ${travisBuild.commit.message}`)
+  context.log.info(`Getting a check from branch: ${travisBuild.branch.name}`)
+  context.log.info(`On commit: ${travisBuild.commit.message}`)
 }
 
 const shouldMergeAcceptedFeature = async (context, config, build) => {
@@ -128,8 +128,8 @@ const shouldPruneRedundantFeatures = async (context, config, buildId) => {
 
 const pruneRedundantFeatures = async (context, repoDir, config, build) => {
   const redundantFeatures = await travis.getTravisRedundantFeatures(build)
-  context.log('FOUND REDUNDANT FEATURES: ')
-  context.log(redundantFeatures.join('\n'))
+  context.log.info('FOUND REDUNDANT FEATURES: ')
+  context.log.info(redundantFeatures.join('\n'))
   if (redundantFeatures.length) {
     return prune.removeRedundantFeatures(
       context,
