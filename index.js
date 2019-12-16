@@ -17,6 +17,13 @@ module.exports = app => {
     const repoUrl = context.payload.repository.html_url
     const detailsUrl = context.payload.check_run.details_url
 
+    // Only respond to travis builds!
+    const slug = context.payload.check_run.app.slug
+    if (slug !== 'travis-ci') {
+      context.log.debug(`Not responding to event from non-Travis app (slug=${slug})`)
+    }
+    // TODO
+
     const repoDir = await github.downloadRepo(repoUrl)
     const config = await loadConfig(context)
 
