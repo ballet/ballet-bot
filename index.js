@@ -1,3 +1,4 @@
+const express = require('express')
 const travis = require('./lib/travis.js')
 const github = require('./lib/github.js')
 const prune = require('./lib/pruning.js')
@@ -11,6 +12,14 @@ const BALLET_CONFIG_FILE = 'ballet.yml'
  * @param {import('probot').Application} app
  */
 module.exports = app => {
+  // Status check
+  const router = app.route("/ballet-bot")
+  router.use(express.static("public"))
+  router.get("/status", (req, res) => {
+    res.send("OK");
+  })
+
+
   app.on('check_run.completed', async context => {
     context.log.info(`Responding to ${context.event} (id=${context.id})`)
 
