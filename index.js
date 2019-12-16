@@ -31,7 +31,6 @@ module.exports = app => {
     if (slug !== 'travis-ci') {
       context.log.debug(`Not responding to event from non-Travis app (slug=${slug})`)
     }
-    // TODO
 
     const repoDir = await github.downloadRepo(repoUrl)
     const config = await loadConfig(context)
