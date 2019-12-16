@@ -2,6 +2,7 @@ const travis = require('./lib/travis.js')
 const github = require('./lib/github.js')
 const prune = require('./lib/pruning.js')
 const util = require('util')
+const dedent = require('dedent')
 
 const BALLET_CONFIG_FILE = 'ballet.yml'
 
@@ -39,6 +40,10 @@ module.exports = app => {
     const shouldMergeResult = await shouldMerge
     if (shouldMergeResult.result) {
       context.log('Merging PR...')
+      const message = dedent`
+        After validation, your feature was accepted. It will be automatically merged into the project.
+      `
+      await github.commentOnPullRequest(context, travisBuild.pull_request_number, message)
       await github.mergePullRequest(context, travisBuild.pull_request_number)
       await github.closePullRequest(context, travisBuild.pull_request_number)
     } else {
@@ -48,6 +53,10 @@ module.exports = app => {
     const shouldCloseResult = await shouldClose
     if (shouldCloseResult.result) {
       context.log('Closing PR...')
+      const message = dedent`
+        After validation, your feature was rejected. Your pull request will be closed. For more details about failures in the validation process, check out the Travis CI build logs.
+      `
+      await github.commentOnPullRequest(context, travisBuild.pull_request_number, message)
       await github.closePullRequest(context, travisBuild.pull_request_number)
     } else {
       context.log(`Not acting to close PR because ${shouldCloseResult.reason}`)
