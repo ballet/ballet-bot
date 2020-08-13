@@ -13,12 +13,11 @@ const BALLET_CONFIG_FILE = 'ballet.yml'
  */
 module.exports = app => {
   // Status check
-  const router = app.route("/ballet-bot")
-  router.use(express.static("public"))
-  router.get("/status", (req, res) => {
-    res.send("OK");
+  const router = app.route('/ballet-bot')
+  router.use(express.static('public'))
+  router.get('/status', (req, res) => {
+    res.send('OK')
   })
-
 
   app.on('check_run.completed', async context => {
     context.log.info(`Responding to ${context.event} (id=${context.id})`)
@@ -84,10 +83,10 @@ module.exports = app => {
 
 const loadConfig = async (context) => {
   const config = await context.config(`../${BALLET_CONFIG_FILE}`)
-  if (config.default) {
-    const s = util.inspect(config.default, { depth: 5, breakLength: Infinity })
-    context.log.debug(`Loaded config from ballet.yml:default: ${s}`)
-    return config.default
+  if (config) {
+    const s = util.inspect(config, { depth: 5, breakLength: Infinity })
+    context.log.debug(`Loaded config from ballet.yml: ${s}`)
+    return config
   }
 }
 
