@@ -82,7 +82,10 @@ module.exports = app => {
 }
 
 const loadConfig = async (context) => {
-  const config = await context.config(`../${BALLET_CONFIG_FILE}`)
+  let config = await context.config(`../${BALLET_CONFIG_FILE}`)
+  if (config.default) {
+    config = config.default
+  }
   if (config) {
     const s = util.inspect(config, { depth: 5, breakLength: Infinity })
     context.log.debug(`Loaded config from ballet.yml: ${s}`)
