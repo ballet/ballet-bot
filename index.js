@@ -1,11 +1,11 @@
-const express = require('express')
-const travis = require('./lib/travis.js')
-const github = require('./lib/github.js')
-const prune = require('./lib/pruning.js')
-const util = require('util')
-const dedent = require('dedent')
+const express = require('express');
+const travis = require('./lib/travis.js');
+const github = require('./lib/github.js');
+const prune = require('./lib/pruning.js');
+const util = require('util');
+const dedent = require('dedent');
 
-const BALLET_CONFIG_FILE = 'ballet.yml'
+const BALLET_CONFIG_FILE = 'ballet.yml';
 
 /**
  * This is the main entrypoint to your Probot app
@@ -13,174 +13,174 @@ const BALLET_CONFIG_FILE = 'ballet.yml'
  */
 module.exports = app => {
   // Status check
-  const router = app.route('/ballet-bot')
-  router.use(express.static('public'))
+  const router = app.route('/ballet-bot');
+  router.use(express.static('public'));
   router.get('/status', (req, res) => {
-    res.send('OK')
-  })
+    res.send('OK');
+  });
 
   app.on('check_run.completed', async context => {
-    context.log.info(`Responding to ${context.event} (id=${context.id})`)
+    context.log.info(`Responding to ${context.event} (id=${context.id})`);
 
-    const repoUrl = context.payload.repository.html_url
-    const detailsUrl = context.payload.check_run.details_url
+    const repoUrl = context.payload.repository.html_url;
+    const detailsUrl = context.payload.check_run.details_url;
 
     // Only respond to travis builds!
-    const slug = context.payload.check_run.app.slug
+    const slug = context.payload.check_run.app.slug;
     if (slug !== 'travis-ci') {
-      context.log.debug(`Not responding to event from non-Travis app (slug=${slug})`)
-      return
+      context.log.debug(`Not responding to event from non-Travis app (slug=${slug})`);
+      return;
     }
 
-    const repoDir = await github.downloadRepo(repoUrl)
-    const config = await loadConfig(context)
+    const repoDir = await github.downloadRepo(repoUrl);
+    const config = await loadConfig(context);
 
-    const travisBuildId = travis.getBuildIdFromDetailsUrl(detailsUrl)
-    const travisBuild = await travis.getBuildFromId(travisBuildId)
+    const travisBuildId = travis.getBuildIdFromDetailsUrl(detailsUrl);
+    const travisBuild = await travis.getBuildFromId(travisBuildId);
 
-    logImportantInformation(context, travisBuild)
+    logImportantInformation(context, travisBuild);
 
-    const shouldPrune = shouldPruneRedundantFeatures(context, config, travisBuildId)
-    const shouldMerge = shouldMergeAcceptedFeature(context, config, travisBuild)
-    const shouldClose = shouldCloseRejectedFeature(context, config, travisBuild)
+    const shouldPrune = shouldPruneRedundantFeatures(context, config, travisBuildId);
+    const shouldMerge = shouldMergeAcceptedFeature(context, config, travisBuild);
+    const shouldClose = shouldCloseRejectedFeature(context, config, travisBuild);
 
-    const shouldPruneResult = await shouldPrune
+    const shouldPruneResult = await shouldPrune;
     if (shouldPruneResult.result) {
-      context.log.info('Pruning features...')
-      await pruneRedundantFeatures(context, repoDir.name, config, travisBuild)
+      context.log.info('Pruning features...');
+      await pruneRedundantFeatures(context, repoDir.name, config, travisBuild);
     } else {
-      context.log.info(`Not acting to prune features because ${shouldPruneResult.reason}`)
+      context.log.info(`Not acting to prune features because ${shouldPruneResult.reason}`);
     }
 
-    const shouldMergeResult = await shouldMerge
+    const shouldMergeResult = await shouldMerge;
     if (shouldMergeResult.result) {
-      context.log.info('Merging PR...')
+      context.log.info('Merging PR...');
       const message = dedent`
         After validation, your feature was accepted. It will be automatically merged into the project.
-      `
-      await github.commentOnPullRequest(context, travisBuild.pull_request_number, message)
-      await github.mergePullRequest(context, travisBuild.pull_request_number)
-      await github.closePullRequest(context, travisBuild.pull_request_number)
+      `;
+      await github.commentOnPullRequest(context, travisBuild.pull_request_number, message);
+      await github.mergePullRequest(context, travisBuild.pull_request_number);
+      await github.closePullRequest(context, travisBuild.pull_request_number);
     } else {
-      context.log.info(`Not acting to merge PR because ${shouldMergeResult.reason}`)
+      context.log.info(`Not acting to merge PR because ${shouldMergeResult.reason}`);
     }
 
-    const shouldCloseResult = await shouldClose
+    const shouldCloseResult = await shouldClose;
     if (shouldCloseResult.result) {
-      context.log.info('Closing PR...')
+      context.log.info('Closing PR...');
       const message = dedent`
         After validation, your feature was rejected. Your pull request will be closed. For more details about failures in the validation process, check out the Travis CI build logs.
-      `
-      await github.commentOnPullRequest(context, travisBuild.pull_request_number, message)
-      await github.closePullRequest(context, travisBuild.pull_request_number)
+      `;
+      await github.commentOnPullRequest(context, travisBuild.pull_request_number, message);
+      await github.closePullRequest(context, travisBuild.pull_request_number);
     } else {
-      context.log.info(`Not acting to close PR because ${shouldCloseResult.reason}`)
+      context.log.info(`Not acting to close PR because ${shouldCloseResult.reason}`);
     }
 
-    repoDir.removeCallback()
-  })
-}
+    repoDir.removeCallback();
+  });
+};
 
 const loadConfig = async (context) => {
-  let config = await context.config(`../${BALLET_CONFIG_FILE}`)
+  let config = await context.config(`../${BALLET_CONFIG_FILE}`);
   if (config.default) {
-    config = config.default
+    config = config.default;
   }
   if (config) {
-    const s = util.inspect(config, { depth: 5, breakLength: Infinity })
-    context.log.debug(`Loaded config from ballet.yml: ${s}`)
-    return config
+    const s = util.inspect(config, { depth: 5, breakLength: Infinity });
+    context.log.debug(`Loaded config from ballet.yml: ${s}`);
+    return config;
   }
-}
+};
 
 const logImportantInformation = (context, travisBuild) => {
-  context.log.info(`Getting a check from branch: ${travisBuild.branch.name}`)
-  context.log.info(`On commit: ${travisBuild.commit.message}`)
-}
+  context.log.info(`Getting a check from branch: ${travisBuild.branch.name}`);
+  context.log.info(`On commit: ${travisBuild.commit.message}`);
+};
 
 const shouldMergeAcceptedFeature = async (context, config, build) => {
-  let result, reason
+  let result, reason;
   if (build.event_type !== 'pull_request') {
-    result = false
-    reason = 'not a PR'
+    result = false;
+    reason = 'not a PR';
   } else if (!(await travis.doesBuildPassAllChecks(build.id))) {
-    result = false
-    reason = 'Travis build did not pass'
+    result = false;
+    reason = 'Travis build did not pass';
   } else if (
     !(await github.isPullRequestProposingFeature(
       context,
       build.pull_request_number
     ))
   ) {
-    result = false
-    reason = 'PR does not propose a feature'
+    result = false;
+    reason = 'PR does not propose a feature';
   } else if (config.github.auto_merge_accepted_features === 'no') {
-    result = false
-    reason = 'auto_merge_accepted_features disabled in config'
+    result = false;
+    reason = 'auto_merge_accepted_features disabled in config';
   } else {
-    result = true
-    reason = '<n/a>'
+    result = true;
+    reason = '<n/a>';
   }
 
-  return { result, reason }
-}
+  return { result, reason };
+};
 
 const shouldPruneRedundantFeatures = async (context, config, buildId) => {
-  let result, reason
+  let result, reason;
   if (!(await github.isOnMasterAfterMerge(context))) {
-    result = false
-    reason = 'not on master branch after merge commit'
+    result = false;
+    reason = 'not on master branch after merge commit';
   } else if (!(await travis.doesBuildPassAllChecks(buildId))) {
-    result = false
-    reason = 'Travis build is failing'
+    result = false;
+    reason = 'Travis build is failing';
   } else if (config.github.pruning_action === 'no_action') {
-    result = false
-    reason = 'pruning_action set to no_action in config'
+    result = false;
+    reason = 'pruning_action set to no_action in config';
   } else {
-    result = true
-    reason = '<n/a>'
+    result = true;
+    reason = '<n/a>';
   }
 
-  return { result, reason }
-}
+  return { result, reason };
+};
 
 const pruneRedundantFeatures = async (context, repoDir, config, build) => {
-  const redundantFeatures = await travis.getTravisRedundantFeatures(build)
-  context.log.info('FOUND REDUNDANT FEATURES: ')
-  context.log.info(redundantFeatures.join('\n'))
+  const redundantFeatures = await travis.getTravisRedundantFeatures(build);
+  context.log.info('FOUND REDUNDANT FEATURES: ');
+  context.log.info(redundantFeatures.join('\n'));
   if (redundantFeatures.length) {
     return prune.removeRedundantFeatures(
       context,
       repoDir,
       config,
       redundantFeatures
-    )
+    );
   }
-}
+};
 
 const shouldCloseRejectedFeature = async (context, config, build) => {
-  let result, reason
+  let result, reason;
   if (build.event_type !== 'pull_request') {
-    result = false
-    reason = 'not a pull request'
+    result = false;
+    reason = 'not a pull request';
   } else if (await travis.doesBuildPassAllChecks(build.id)) {
-    result = false
-    reason = 'passed all checks on CI'
+    result = false;
+    reason = 'passed all checks on CI';
   } else if (
     !(await github.isPullRequestProposingFeature(
       context,
       build.pull_request_number
     ))
   ) {
-    result = false
-    reason = 'PR does not propose a feature'
+    result = false;
+    reason = 'PR does not propose a feature';
   } else if (config.github.auto_close_rejected_features === 'no') {
-    result = false
-    reason = 'auto_close_rejected_features disabled in config'
+    result = false;
+    reason = 'auto_close_rejected_features disabled in config';
   } else {
-    result = true
-    reason = '<n/a>'
+    result = true;
+    reason = '<n/a>';
   }
 
-  return { result, reason }
-}
+  return { result, reason };
+};
