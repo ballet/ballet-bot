@@ -74,9 +74,7 @@ module.exports = (app) => {
         ? `We found that your feature provided more information than another feature: ${omittedFeature}`
         : 'We found that your feature added valuable information on top of all the existing features';
       const message = dedent`
-        After validation, your feature was accepted.
-        ${omittedFeatureMessage}
-        It will be automatically merged into the project.
+        After validation, your feature was accepted. ${omittedFeatureMessage}. It will be automatically merged into the project.
       `;
       await github.commentOnPullRequest(
         context,
