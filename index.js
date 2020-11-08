@@ -58,7 +58,7 @@ module.exports = (app) => {
 
     const shouldPruneResult = await shouldPrune;
     if (shouldPruneResult.result) {
-      context.log.info("Pruning features...");
+      context.log.info('Pruning features...');
       await pruneRedundantFeatures(context, repoDir.name, config, travisBuild);
     } else {
       context.log.info(
@@ -68,11 +68,11 @@ module.exports = (app) => {
 
     const shouldMergeResult = await shouldMerge;
     if (shouldMergeResult.shouldMerge) {
-      context.log.info("Merging PR...");
-      const { omittedFeature } = travis.getTravisAcceptanceMetadata(buildId);
+      context.log.info('Merging PR...');
+      const { omittedFeature } = travis.getTravisAcceptanceMetadata(travisBuildId);
       const omittedFeatureMessage = omittedFeature
         ? `We found that your feature provided more information than another feature: ${omittedFeature}`
-        : `We found that your feature added valuable information on top of all the existing features`;
+        : 'We found that your feature added valuable information on top of all the existing features';
       const message = dedent`
         After validation, your feature was accepted.
         ${omittedFeatureMessage}
@@ -93,7 +93,7 @@ module.exports = (app) => {
 
     const shouldCloseResult = await shouldClose;
     if (shouldCloseResult.result) {
-      context.log.info("Closing PR...");
+      context.log.info('Closing PR...');
       const message = dedent`
         After validation, your feature was rejected. Your pull request will be closed. For more details about failures in the validation process, check out the Travis CI build logs.
       `;
@@ -129,12 +129,12 @@ const logImportantInformation = (context, travisBuild) => {
 
 const shouldMergeAcceptedFeature = async (context, config, build) => {
   let shouldMerge, reason;
-  if (build.event_type !== "pull_request") {
+  if (build.event_type !== 'pull_request') {
     shouldMerge = false;
-    reason = "not a PR";
+    reason = 'not a PR';
   } else if (!(await travis.doesBuildPassAllChecks(build.id))) {
     shouldMerge = false;
-    reason = "Travis build did not pass";
+    reason = 'Travis build did not pass';
   } else if (
     !(await github.isPullRequestProposingFeature(
       context,
@@ -142,13 +142,13 @@ const shouldMergeAcceptedFeature = async (context, config, build) => {
     ))
   ) {
     shouldMerge = false;
-    reason = "PR does not propose a feature";
-  } else if (config.github.auto_merge_accepted_features === "no") {
+    reason = 'PR does not propose a feature';
+  } else if (config.github.auto_merge_accepted_features === 'no') {
     shouldMerge = false;
-    reason = "auto_merge_accepted_features disabled in config";
+    reason = 'auto_merge_accepted_features disabled in config';
   } else {
     shouldMerge = true;
-    reason = "<n/a>";
+    reason = '<n/a>';
   }
 
   return { shouldMerge, reason };
@@ -158,16 +158,16 @@ const shouldPruneRedundantFeatures = async (context, config, buildId) => {
   let result, reason;
   if (!(await github.isOnMasterAfterMerge(context))) {
     result = false;
-    reason = "not on master branch after merge commit";
+    reason = 'not on master branch after merge commit';
   } else if (!(await travis.doesBuildPassAllChecks(buildId))) {
     result = false;
-    reason = "Travis build is failing";
-  } else if (config.github.pruning_action === "no_action") {
+    reason = 'Travis build is failing';
+  } else if (config.github.pruning_action === 'no_action') {
     result = false;
-    reason = "pruning_action set to no_action in config";
+    reason = 'pruning_action set to no_action in config';
   } else {
     result = true;
-    reason = "<n/a>";
+    reason = '<n/a>';
   }
 
   return { result, reason };
@@ -175,8 +175,8 @@ const shouldPruneRedundantFeatures = async (context, config, buildId) => {
 
 const pruneRedundantFeatures = async (context, repoDir, config, build) => {
   const redundantFeatures = await travis.getTravisRedundantFeatures(build);
-  context.log.info("FOUND REDUNDANT FEATURES: ");
-  context.log.info(redundantFeatures.join("\n"));
+  context.log.info('FOUND REDUNDANT FEATURES: ');
+  context.log.info(redundantFeatures.join('\n'));
   if (redundantFeatures.length) {
     return prune.removeRedundantFeatures(
       context,
@@ -189,12 +189,12 @@ const pruneRedundantFeatures = async (context, repoDir, config, build) => {
 
 const shouldCloseRejectedFeature = async (context, config, build) => {
   let result, reason;
-  if (build.event_type !== "pull_request") {
+  if (build.event_type !== 'pull_request') {
     result = false;
-    reason = "not a pull request";
+    reason = 'not a pull request';
   } else if (await travis.doesBuildPassAllChecks(build.id)) {
     result = false;
-    reason = "passed all checks on CI";
+    reason = 'passed all checks on CI';
   } else if (
     !(await github.isPullRequestProposingFeature(
       context,
@@ -202,13 +202,13 @@ const shouldCloseRejectedFeature = async (context, config, build) => {
     ))
   ) {
     result = false;
-    reason = "PR does not propose a feature";
-  } else if (config.github.auto_close_rejected_features === "no") {
+    reason = 'PR does not propose a feature';
+  } else if (config.github.auto_close_rejected_features === 'no') {
     result = false;
-    reason = "auto_close_rejected_features disabled in config";
+    reason = 'auto_close_rejected_features disabled in config';
   } else {
     result = true;
-    reason = "<n/a>";
+    reason = '<n/a>';
   }
 
   return { result, reason };
