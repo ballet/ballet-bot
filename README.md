@@ -1,5 +1,5 @@
 ![Uptime Status](https://img.shields.io/uptimerobot/status/m784006190-b0fa1300848e931654e56628)
-[![Travis CI Shield](https://travis-ci.org/HDI-Project/ballet-bot.svg?branch=master)](https://travis-ci.org/HDI-Project/ballet-bot)
+[![Travis CI Shield](https://travis-ci.org/ballet/ballet-bot.svg?branch=master)](https://travis-ci.org/ballet/ballet-bot)
 
 # ballet-bot
 
