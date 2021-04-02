@@ -112,11 +112,19 @@ module.exports = (app) => {
 };
 
 const loadConfig = async (context) => {
-  const config = await context.config(`../${BALLET_CONFIG_FILE}`);
+  let config = await context.config(`../${BALLET_CONFIG_FILE}`);
+
+  // This is to accommodate old config file formats from previous ballet
+  // versions. Previously, ballet.yml had a root key "default"
+  // (https://ballet.github.io/ballet/history.html#id14)
   if (config.default) {
-    const s = util.inspect(config.default, { depth: 5, breakLength: Infinity });
+    config = config.default
+  }
+
+  if (config) {
+    const s = util.inspect(config, { depth: 5, breakLength: Infinity });
     context.log.debug(`Loaded config from ballet.yml:default: ${s}`);
-    return config.default;
+    return config;
   }
 };
 
