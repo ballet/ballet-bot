@@ -2,14 +2,14 @@
   "name": "ballet-bot",
   "version": "1.0.0",
   "description": "A bot to help manage Ballet projects",
-  "author": "Kelvin Lu <kelvinlu@mit.edu> (https://github.com/https://github.com/Kelvin-Lu)",
+  "author": "Kelvin Lu <kelvinlu@mit.edu> (https://github.com/Kelvin-Lu)",
   "contributors": [
     "Micah Smith <micahjsmith@gmail.copm> (https://www.micahsmith.com/)"
   ],
   "license": "ISC",
-  "repository": "https://github.com/ballet-bot.git",
-  "homepage": "https://github.com/ballet-bot",
-  "bugs": "https://github.com/ballet-bot/issues",
+  "repository": "https://github.com/ballet/ballet-bot.git",
+  "homepage": "https://github.com/ballet/ballet-bot",
+  "bugs": "https://github.com/ballet/ballet-bot/issues",
   "keywords": [
     "probot",
     "github",
