@@ -4,7 +4,7 @@
   "description": "A bot to help manage Ballet projects",
   "author": "Kelvin Lu <kelvinlu@mit.edu> (https://github.com/Kelvin-Lu)",
   "contributors": [
-    "Micah Smith <micahjsmith@gmail.copm> (https://www.micahsmith.com/)"
+    "Micah Smith <micahjsmith@gmail.com> (https://www.micahsmith.com/)"
   ],
   "license": "ISC",
   "repository": "https://github.com/ballet/ballet-bot.git",
