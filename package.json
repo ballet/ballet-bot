@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "dedent": "^0.7.0",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "isomorphic-git": "^0.70.8",
     "new-github-issue-url": "^0.2.1",
     "probot": "^9.6.6",
