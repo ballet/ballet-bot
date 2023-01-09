@@ -27,7 +27,7 @@
     "express": "^4.17.1",
     "isomorphic-git": "^0.70.8",
     "new-github-issue-url": "^0.2.1",
-    "probot": "^9.6.6",
+    "probot": "^12.2.8",
     "request": "^2.88.0",
     "request-promise": "^4.2.5",
     "tmp": "^0.1.0",
